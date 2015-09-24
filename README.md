@@ -1,6 +1,9 @@
 # check_system_updates
 Simple Nagios plugin to check using YUM/apt for package updates.
 
+- Auto-detect linux distribution (centos/redhat/debian/ubuntu)
+- No configuration needed.
+
 ### Installation
 
 Since it's an active check, it's best used with NRPE. 
