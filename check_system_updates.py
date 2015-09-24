@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 #
-# It's a simple Nagios plugin to check using YUM/apt for package updates. 
+# It's a simple Nagios plugin to check using YUM/apt for packages updates.
 # Auto-detect linux distribution, no configuration needed.
 #
 # Copyright (C) 2015 Hernan Collazo <hernan.collazo@gmail.com>
@@ -81,7 +81,7 @@ def osData():
 def checkUpdates(dist):
     "Return pending updates, based on linux-distribution"
     dist = dist.lower()
-    if dist == 'centos':
+    if dist == 'centos' or dist == 'centos linux':
         updates = yumUpdates()
     elif dist == 'ubuntu' or dist == 'debian':
         updates = aptUpdates()
@@ -100,7 +100,7 @@ def aptUpdates():
         print("OK - No pending updates.")
         sys.exit(OK)
     elif pendingUpdates > 0:
-        print("CRITICAL - Updates pending! (" + str(pendingUpdates) + ")")
+        print("CRITICAL - Updates pending! (" + str(pendingUpdates) + " packages)")
         sys.exit(CRITICAL)
     else:
         print("UNKNOWN - Unknown error")
@@ -111,11 +111,12 @@ def yumUpdates():
     "Get pending system updates using yum"
     cmdUpdate = '/usr/bin/yum check-update'
     cmdStatus, cmdOutput = runCmd(cmdUpdate)
+    pendingUpdates = len(cmdOutput)
     if cmdStatus == 0:
         print("OK - No pending updates.")
         sys.exit(OK)
     elif cmdStatus == 100:
-        print("CRITICAL - Updates pending!")
+        print("Updates pending! (" + str(pendingUpdates) + " packages)")
         sys.exit(CRITICAL)
     else:
         print("UNKNOWN - Unknown error")
@@ -126,6 +127,7 @@ def main():
     myOs = osData()
     curOs = myOs['system']
     curDist = myOs['dist']
+    print("OS: [" + curOs + "] Distro: [" + curDist + "]")
     checkUpdates(curDist)
 
 
