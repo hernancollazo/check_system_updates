@@ -97,13 +97,13 @@ def aptUpdates():
     cmdOutput = ' '.join(cmdOutput)
     pendingUpdates = cmdOutput.count('Inst ')
     if pendingUpdates == 0:
-        print("OK - No pending updates.")
+        print("No pending updates.")
         sys.exit(OK)
     elif pendingUpdates > 0:
-        print("CRITICAL - Updates pending! (" + str(pendingUpdates) + " packages)")
+        print("Updates pending! (" + str(pendingUpdates) + " packages)")
         sys.exit(CRITICAL)
     else:
-        print("UNKNOWN - Unknown error")
+        print("Unknown error")
         sys.exit(UNKNOWN)
 
 
@@ -113,13 +113,13 @@ def yumUpdates():
     cmdStatus, cmdOutput = runCmd(cmdUpdate)
     pendingUpdates = len(cmdOutput)
     if cmdStatus == 0:
-        print("OK - No pending updates.")
+        print("No pending updates.")
         sys.exit(OK)
     elif cmdStatus == 100:
         print("Updates pending! (" + str(pendingUpdates) + " packages)")
         sys.exit(CRITICAL)
     else:
-        print("UNKNOWN - Unknown error")
+        print("Unknown error")
         sys.exit(UNKNOWN)
 
 
@@ -127,7 +127,7 @@ def main():
     myOs = osData()
     curOs = myOs['system']
     curDist = myOs['dist']
-    print("OS: [" + curOs + "] Distro: [" + curDist + "]")
+    # print("OS: [" + curOs + "] Distro: [" + curDist + "]")
     checkUpdates(curDist)
 
 
