@@ -32,13 +32,13 @@ import datetime
 
 OLD_PYTHON = False
 CTRLFILE = "/tmp/check_system_updates.ctrl"
+curDate = time.strftime("%Y%m%d", time.localtime())
 
 # Nagios Status Codes
 OK = 0
 WARNING = 1
 CRITICAL = 2
 UNKNOWN = 3
-curDate = time.strftime("%Y%m%d", time.localtime())
 
 try:
     from subprocess import Popen, PIPE, STDOUT
