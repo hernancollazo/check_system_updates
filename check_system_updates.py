@@ -27,20 +27,45 @@ import os
 import sys
 import platform
 import signal
+import time
+import datetime
 
 OLD_PYTHON = False
+CTRLFILE = "/tmp/check_system_updates.ctrl"
 
 # Nagios Status Codes
 OK = 0
 WARNING = 1
 CRITICAL = 2
 UNKNOWN = 3
+curDate = time.strftime("%Y%m%d", time.localtime())
 
 try:
     from subprocess import Popen, PIPE, STDOUT
 except ImportError:
     OLD_PYTHON = True
     import commands
+
+
+def getLastCheckData():
+    "Get last check data from control file."
+    if os.path.exists(CTRLFILE,):
+        fo = open(CTRLFILE, 'r')
+        fileData = fo.readline()
+        (lcDate, lcData, lcMsg) = fileData.split(':')
+    else:
+        lcDate = "Unknown"
+        lcData = 0
+        lcMsg = "Unknown"
+    return(lcDate, lcData, lcMsg)
+
+
+def saveLastCheckData(state, msg):
+    "Save last check data into control file."
+    fo = open(CTRLFILE, "w")
+    fo.write(curDate + ":" + str(state) + ":" + msg)
+    fo.close()
+    return
 
 
 def runCmd(cmd):
@@ -51,7 +76,8 @@ def runCmd(cmd):
             returncode = returncode / 256
     else:
         try:
-            process = Popen(cmd.split(), stdin=PIPE, stdout=PIPE, stderr=STDOUT)
+            process = Popen(cmd.split(), stdin=PIPE,
+                            stdout=PIPE, stderr=STDOUT)
         except OSError, error:
             error = str(error)
             if error == "No such file or directory":
@@ -97,14 +123,17 @@ def aptUpdates():
     cmdOutput = ' '.join(cmdOutput)
     pendingUpdates = cmdOutput.count('Inst ')
     if pendingUpdates == 0:
-        print("No pending updates.")
-        sys.exit(OK)
+        exitMsg = "No pending updates."
+        exitStatus = OK
     elif pendingUpdates > 0:
-        print("Updates pending! (" + str(pendingUpdates) + " packages)")
-        sys.exit(CRITICAL)
+        exitMsg = "Updates pending! (" + str(pendingUpdates) + " packages)"
+        exitStatus = CRITICAL
     else:
-        print("Unknown error")
-        sys.exit(UNKNOWN)
+        exitMsg = "Unknown Error"
+        exitStatus = UNKNOWN
+    saveLastCheckData(exitStatus, exitMsg)
+    print(exitMsg)
+    sys.exit(exitStatus)
 
 
 def yumUpdates():
@@ -113,23 +142,29 @@ def yumUpdates():
     cmdStatus, cmdOutput = runCmd(cmdUpdate)
     pendingUpdates = len(cmdOutput)
     if cmdStatus == 0:
-        print("No pending updates.")
-        sys.exit(OK)
+        exitMsg = "No pending updates."
+        exitStatus = OK
     elif cmdStatus == 100:
-        print("Updates pending! (" + str(pendingUpdates) + " packages)")
-        sys.exit(CRITICAL)
+        exitMsg = "Updates pending! (" + str(pendingUpdates) + " packages)"
+        exitStatus = CRITICAL
     else:
-        print("Unknown error")
-        sys.exit(UNKNOWN)
+        exitMsg = "Unknown Error"
+        exitStatus = UNKNOWN
+    saveLastCheckData(exitStatus, exitMsg)
+    print(exitMsg)
+    sys.exit(exitStatus)
 
 
 def main():
-    myOs = osData()
-    curOs = myOs['system']
-    curDist = myOs['dist']
-    # print("OS: [" + curOs + "] Distro: [" + curDist + "]")
-    checkUpdates(curDist)
-
+    lcDate, lcData, lcMsg = getLastCheckData()
+    if str(lcDate) == str(curDate):
+        print lcMsg + " (cached)"
+        sys.exit(int(lcData))
+    else:
+        myOs = osData()
+        curOs = myOs['system']
+        curDist = myOs['dist']
+        checkUpdates(curDist)
 
 if __name__ == '__main__':
     main()
